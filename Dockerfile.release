@@ -1,0 +1,29 @@
+FROM docker.io/paritytech/ci-linux:production as builder
+LABEL description="This is the build stage for cumulus. Here we create the binary."
+
+WORKDIR /cumulus
+
+COPY . /cumulus
+
+RUN cargo build --release
+
+# ===== SECOND STAGE ======
+
+FROM docker.io/library/ubuntu:20.04
+LABEL description="This is the 2nd stage: a very small image where we copy the cumulus binary."
+COPY --from=builder /cumulus/target/release/polkadot-collator /usr/local/bin
+
+RUN apt update -y \
+  && apt install -y ca-certificates libssl-dev \
+  && useradd -m -u 1000 -U -s /bin/sh -d /cumulus cumulus \
+        && mkdir -p /cumulus/.local \
+        && mkdir /data \
+        && chown -R cumulus:cumulus /data \
+        && ln -s /data /cumulus/.local/share \
+        && chown -R cumulus:cumulus /cumulus/.local/share
+
+USER cumulus
+EXPOSE 30333 9933 9944
+VOLUME ["/data"]
+
+ENTRYPOINT ["/usr/local/bin/polkadot-collator"]
