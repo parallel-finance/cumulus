@@ -6,7 +6,7 @@ cd "$(cd "$(dirname "$0")" && git rev-parse --show-toplevel)"
 
 dockerfile="$1"
 if [ -z "$dockerfile" ]; then
-    dockerfile="./docker/test-parachain-collator.dockerfile"
+    dockerfile="./docker/polkadot-parachain_builder.Containerfile"
 else
     shift 1
 fi
@@ -16,6 +16,6 @@ echo "building $dockerfile as $image_name..."
 
 time docker build \
     -f "$dockerfile" \
-    -t "$image_name":latest \
+    -t cumulus:v0.9.24 \
     "$@" \
     .
